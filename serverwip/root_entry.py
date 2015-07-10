@@ -18,6 +18,8 @@ def create_template_config():
     conf = configparser.ConfigParser()
     conf['FILES'] = { 'character' : variables.character,
                       'save'      : variables.save}
+    conf['SERVER']= { 'host'      : variables.host,
+                      'port'      : variables.port}
     with open(variables.config, 'w') as configfile:
         conf.write(configfile)
 #-------------------
@@ -26,7 +28,9 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--config', help='the main configuration file', type=str)
     parser.add_argument('-z', '--zoom', help='size of the shown character', type=int, metavar='INT')
     parser.add_argument('-t', '--time', help='time until autosave', type=int, metavar='INT')
-    parser.add_argument('--cheat', help='open cheat console')
+    parser.add_argument('-hs', '--host', help='custom host', type=str, metavar='STR')
+    parser.add_argument('-p', '--port', help='custom port number', type=int, metavar='INT')
+    parser.add_argument('--noserver', help='run in no server mode', action='store_true')
 
     args = parser.parse_args()
 
@@ -44,7 +48,7 @@ if __name__ == '__main__':
     cp = configparser.ConfigParser()
     cp.read(config)
     # is it correct? check the sections
-    if 'FILES' not in cp:
+    if 'FILES' not in cp or 'SERVER' not in cp:
         raise ConfigParseError('some config sections are missing')
     
     character = ''
@@ -64,8 +68,22 @@ if __name__ == '__main__':
     if args.time:
         time = args.time
 
+    host = cp['SERVER']['host']
+    if args.host:
+        host = args.host
+
+    port = int(cp['SERVER']['port'])
+    if args.port:
+        port = args.port
+
     # now that we finally have everything, we
     # can start the program
-
-    root = RootWindow(character, save, zoom, time, cheats=args.cheat)
+    srv = None
+    if not args.noserver:
+        srv = Server(host, port)
+        threading.Thread(target=srv.thread).start()
+    root = RootWindow(host, port, character, save, zoom, time, noserver=(args.noserver==True))
     root.main_loop()
+    #threading.Thread(target=srv.thread).stop()
+    #if not args.noserver:
+    #    srv.stop = True

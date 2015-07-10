@@ -97,7 +97,7 @@ class PicShow(Frame):
                 i += 1
         
         self.pic = tkinter.Label(self, image=self.img)
-        self.pic.grid(row=0, column=0, columnspan=2)
+        self.pic.grid(row=0, column=0)
         self.lvstring = StringVar()
         self.expstring = StringVar()
         #print(self.chara.get_lvl())
@@ -136,6 +136,13 @@ class PicShow(Frame):
             self.atime = 0
         
         self.after(1000, self.update_stats)
+
+#----------------
+
+    def receive_command(self, data):
+        '''get command from parent'''
+        if data > 0:
+            self.chara.set_exp(self.chara.get_exp()+data)
 
 #----------------
 
